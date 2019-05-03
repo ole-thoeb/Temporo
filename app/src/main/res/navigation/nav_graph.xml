@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools" android:id="@+id/nav_graph"
+    app:startDestination="@id/sequenceEditor">
+
+    <fragment
+        android:id="@+id/testFragment"
+        android:name="com.eloem.temporo.ui.TestFragment"
+        android:label="fragment_test"
+        tools:layout="@layout/fragment_test"/>
+
+    <fragment
+        android:id="@+id/displaySequenceTimer"
+        android:name="com.eloem.temporo.ui.DisplaySequenceTimerFragment"
+        android:label="DisplaySequenceTimer"
+        tools:layout="@layout/fragment_display_sequence_timer"/>
+
+    <fragment
+        android:id="@+id/sequenceEditor"
+        android:name="com.eloem.temporo.ui.SequenceEditorFragment"
+        android:label="SequenceEditor"
+        tools:layout="@layout/fragment_sequence_editor"/>
+</navigation>

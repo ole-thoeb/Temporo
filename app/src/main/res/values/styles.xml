@@ -1,0 +1,8 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="LightAppTheme" parent="Base.Theme.MaterialComponents.Light">
+        <item name="textColorSubtle">#575757</item>
+    </style>
+
+</resources>

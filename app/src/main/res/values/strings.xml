@@ -1,0 +1,40 @@
+<resources>
+    <string name="app_name">Temporo</string>
+
+    <string name="dialogPositive">Jop</string>
+    <string name="dialogNegative">Nope</string>
+
+    <string-array name="componentTypes">
+        <item>Warte</item>
+        <item>Schleife</item>
+        <item>Timer</item>
+    </string-array>
+
+    <string name="component">Komponente</string>
+
+    <string name="seconds">Sekunden</string>
+    <string name="minuets">Minuten</string>
+
+    <!-- Ui Element Options -->
+    <string name="title">Title</string>
+    <string name="showNext">Zeige nächsten</string>
+
+    <!-- Loop Options-->
+    <string name="times">Wiederholungen</string>
+    <string name="unlimited">Unbegrenzte Wiederholungen</string>
+    <string name="tillButton">Abbrechen, wenn Knopf gedrückt wird</string>
+
+    <!-- Display string stuff -->
+    <string name="loopMarkerText">Ende Wiederholung</string>
+    <string name="loopUnlimitedText">Unbegrenzt</string>
+    <string name="loopTillButtonText">Unbegrenzt bis Knopf</string>
+    <string name="loopTimesText">%1$d mal</string>
+
+    <string name="noTitle">kein Titel</string>
+    <string name="showsNext">zeigt Nächsten</string>
+
+    <!-- Notification stuff -->
+    <string name="channel_name">Timer</string>
+    <string name="channel_description">Momentan laufender Timer</string>
+
+</resources>

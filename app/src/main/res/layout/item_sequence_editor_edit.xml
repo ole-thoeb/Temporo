@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_height="wrap_content"
+    android:layout_width="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/background"
+        android:background="?colorError">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_delete"
+            android:tint="?colorOnError"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="8dp"/>
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_delete"
+            android:tint="?colorOnError"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="8dp"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <LinearLayout
+        android:id="@+id/foreground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:background="@android:color/white"
+        android:paddingVertical="4dp">
+
+        <ImageView
+            android:id="@+id/typeIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:tint="?attr/colorOnBackground"
+            app:srcCompat="@drawable/ic_hour_glass"
+            android:layout_gravity="center"
+            android:layout_marginStart="8dp"/>
+
+        <TextView
+            android:id="@+id/informationTv"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textAppearance="?textAppearanceBody1"
+            android:text="Name"
+            android:layout_gravity="center"/>
+
+        <ImageButton
+            android:id="@+id/editButton"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:padding="5dp"
+            android:scaleType="centerCrop"
+            app:srcCompat="@drawable/ic_edit"
+            android:background="?attr/selectableItemBackgroundBorderless"/>
+
+        <ImageView
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:padding="5dp"
+            android:scaleType="centerCrop"
+            app:srcCompat="@drawable/ic_drag"
+            android:layout_gravity="center"
+            android:background="@android:color/transparent"
+            android:id="@+id/dragView"
+            android:layout_marginEnd="3dp"/>
+
+    </LinearLayout>
+</FrameLayout>
