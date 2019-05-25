@@ -1,5 +1,6 @@
 package com.eloem.temporo.timercomponents
 
+import android.util.Log
 import org.jetbrains.anko.collections.forEachReversedByIndex
 
 class TimerHandler(sequence: Component) {
@@ -20,26 +21,53 @@ class TimerHandler(sequence: Component) {
             value?.invoke(this, currentComponent)
         }
 
+    var onButtonStackChangeListener: ((Int) -> Unit)? = null
+        set(value) {
+            field = value
+            value?.invoke(buttonCallStack.size)
+        }
+
+
+    init {
+        switchTo(sequence)
+    }
+
     fun next() {
         switchTo(currentComponent.nextComponent())
     }
 
     fun switchTo(component: Component) {
+        Log.d("handler", "switching to $component")
         detachButtonListener(currentComponent)
 
         currentComponent = component.also {
             it.handler = this
             it.init()
         }
-        if (currentComponent is NoComponent) onFinishedListener?.invoke()
-        else onNextComponentListener?.invoke(this, currentComponent)
 
         attachButtonListener(currentComponent)
+
+        if (currentComponent is NoComponent) onFinishedListener?.invoke()
+        else onNextComponentListener?.invoke(this, currentComponent)
+    }
+
+    fun previewNextUiComponent(): UiComponent {
+        var preview = currentComponent
+        for (i in 0..20) {
+            preview = preview.previewNext()
+            when (preview) {
+                NoComponent -> return NoUIComponent
+                currentComponent -> return NoUIComponent
+                is UiComponent -> return preview
+            }
+        }
+        return NoUIComponent
     }
 
     private fun detachButtonListener(component: Component) {
         if (component is ButtonComponent && component.allowListenerRemoval) {
             buttonCallStack.remove(component)
+            onButtonStackChangeListener?.invoke(buttonCallStack.size)
         }
     }
 
@@ -49,6 +77,7 @@ class TimerHandler(sequence: Component) {
             buttonCallStack.remove(component)
             //add on top
             buttonCallStack.add(component)
+            onButtonStackChangeListener?.invoke(buttonCallStack.size)
         }
     }
 

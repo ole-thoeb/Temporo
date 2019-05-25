@@ -23,6 +23,10 @@ open class CountdownTimerComponent(
     override fun nextComponent(): Component {
         return next
     }
+
+    override fun previewNext(): Component {
+        return next
+    }
 }
 
 open class WaitComponent(
@@ -36,6 +40,10 @@ open class WaitComponent(
     }
 
     override fun nextComponent(): Component {
+        return next
+    }
+
+    override fun previewNext(): Component {
         return next
     }
 

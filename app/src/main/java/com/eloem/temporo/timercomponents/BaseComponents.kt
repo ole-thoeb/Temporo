@@ -6,6 +6,10 @@ import kotlin.reflect.KProperty
 sealed class Component(val id: Long) {
     var next: Component by TimerComponentLink()
     abstract fun nextComponent(): Component
+
+    //returns next component without changing any state
+    abstract fun previewNext(): Component
+
     //called when switched to the component
     abstract fun init()
 
@@ -15,6 +19,12 @@ sealed class Component(val id: Long) {
         return if (id == searchId) this
         else next.findComponentById(searchId)
     }
+
+    override fun equals(other: Any?): Boolean {
+        return other is Component && other.id == id
+    }
+
+    override fun hashCode(): Int = id.toInt()
 
     companion object {
         const val NO_ID = 0L
@@ -38,10 +48,30 @@ object NoComponent: Component(NO_ID) {
         throw UnsupportedOperationException()
     }
 
+    override fun previewNext(): Component = this
+
     override fun findComponentById(searchId: Long): Component {
         return this
     }
 }
+
+object NoUIComponent: UiComponent(NO_ID, "", false) {
+    override fun init() {
+        //nothing
+    }
+
+    override fun nextComponent(): Component {
+        throw UnsupportedOperationException()
+    }
+
+    override fun previewNext(): Component = this
+
+    override fun findComponentById(searchId: Long): Component {
+        return this
+    }
+}
+
+fun Component.isNotNoComponent(): Boolean = this != NoComponent && this != NoUIComponent
 
 interface ButtonComponent {
     fun onButtonPressed(): Boolean

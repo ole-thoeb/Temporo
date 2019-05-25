@@ -7,8 +7,9 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(entities = [
-
-], version = 2, exportSchema = false)
+    SerialisedComponent::class,
+    SequenceSql::class
+], version = 1, exportSchema = false)
 abstract class SequenceRoomDatabase : RoomDatabase() {
     abstract fun sequenceDao(): SequenceDao
 

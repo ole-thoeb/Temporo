@@ -3,6 +3,7 @@
     <!-- Base application theme. -->
     <style name="LightAppTheme" parent="Base.Theme.MaterialComponents.Light">
         <item name="textColorSubtle">#575757</item>
+        <item name="colorDelete">#f44336</item>
     </style>
 
 </resources>

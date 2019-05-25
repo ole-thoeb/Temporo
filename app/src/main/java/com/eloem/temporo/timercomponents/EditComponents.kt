@@ -11,6 +11,8 @@ sealed class EditComponent(var id: Long) {
     abstract fun toEditWait(): EditWait
     abstract fun toEditCountdown(): EditCountdown
 
+    abstract fun toDataComponent(idProvider: () -> Long): DataComponent
+
     abstract fun getDisplayText(context: Context): String
 
     abstract val iconId: Int
@@ -62,6 +64,19 @@ class EditLoop(
         }
     }
 
+    override fun toDataComponent(idProvider: () -> Long): DataComponentLoop {
+        if (id == Component.NO_ID) id = idProvider()
+        return DataComponentLoop(
+            id,
+            when (mode) {
+                Mode.TIMES -> LoopComponent.Mode.TIMES
+                Mode.UNLIMITED -> LoopComponent.Mode.UNLIMITED
+                Mode.TILL_BUTTON -> LoopComponent.Mode.BUTTON_PRESS
+            },
+            times
+        )
+    }
+
     override fun getDisplayText(context: Context): String = when(mode) {
         Mode.TIMES -> context.getString(R.string.loopTimesText, times)
         Mode.UNLIMITED -> context.getString(R.string.loopUnlimitedText)
@@ -72,7 +87,14 @@ class EditLoop(
         colorProvider.free(color)
     }
 
-    val endMarker: EndBranchMarker by lazy { EndBranchMarker(this) }
+    private lateinit var _endMarker: EndBranchMarker
+
+    var endMarker: EndBranchMarker
+        set(value) { _endMarker = value }
+        get() {
+            return if (this::_endMarker.isInitialized) _endMarker
+            else EndBranchMarker(Component.NO_ID, this).also { _endMarker = it }
+        }
 
     override val iconId: Int = R.drawable.ic_loop
 
@@ -82,8 +104,9 @@ class EditLoop(
 }
 
 class EndBranchMarker(
+    id: Long,
     val associatedBranchComponent: EditLoop
-) : EditComponent(Component.NO_ID), ColorComponent {
+) : EditComponent(id), ColorComponent {
 
     override fun toEditLoop(colorProvider: ColorProvider): EditLoop {
         throw UnsupportedOperationException()
@@ -99,6 +122,11 @@ class EndBranchMarker(
 
     override fun toComponent(idProvider: () -> Long): Component {
         throw UnsupportedOperationException()
+    }
+
+    override fun toDataComponent(idProvider: () -> Long): DataComponentMarker {
+        if (id == Component.NO_ID) id = idProvider()
+        return DataComponentMarker(id, associatedBranchComponent.id)
     }
 
     override fun getDisplayText(context: Context): String = context.getString(R.string.loopMarkerText)
@@ -126,6 +154,11 @@ class EditWait(
         return WaitComponent(finalId, title, showNextTitle)
     }
 
+    override fun toDataComponent(idProvider: () -> Long): DataComponentWait {
+        if (id == Component.NO_ID) id = idProvider()
+        return DataComponentWait(id, title, showNextTitle)
+    }
+
     override fun getDisplayText(context: Context): String =
         "${getDisplayTitle(context)} ${if (showNextTitle) ", ${context.getString(R.string.showsNext)}" else ""}"
 
@@ -151,6 +184,11 @@ class EditCountdown(
     override fun toComponent(idProvider: () -> Long): CountdownTimerComponent {
         val finalId = if (id == Component.NO_ID) idProvider() else id
         return CountdownTimerComponent(finalId, title, showNextTitle, length, startSound, endSound)
+    }
+
+    override fun toDataComponent(idProvider: () -> Long): DataComponentCountdown {
+        if (id == Component.NO_ID) id = idProvider()
+        return DataComponentCountdown(id, title, showNextTitle, length, startSound, endSound)
     }
 
     override fun getDisplayText(context: Context): String =

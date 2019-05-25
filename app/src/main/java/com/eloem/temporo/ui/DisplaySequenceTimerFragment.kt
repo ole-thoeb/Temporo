@@ -2,17 +2,31 @@ package com.eloem.temporo.ui
 
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
+import androidx.navigation.ui.navigateUp
 import com.eloem.temporo.R
 import com.eloem.temporo.timercomponents.*
-import com.eloem.temporo.util.minuetSecondText
+import com.eloem.temporo.util.*
 import kotlinx.android.synthetic.main.fragment_display_sequence_timer.*
 
 class DisplaySequenceTimerFragment : ChildFragment() {
 
+    private val TAG = this::class.simpleName
+
     private lateinit var handler: TimerHandler
+
+    private val args: DisplaySequenceTimerFragmentArgs by navArgs()
+
+    private val globalViewModel: GlobalViewModel by activityViewModel()
+    private val displayViewModel: DisplayViewModel by fragmentViewModel()
+
+    private var countdownTimer: CountDownTimer? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return layoutInflater.inflate(R.layout.fragment_display_sequence_timer, container, false)
@@ -34,7 +48,7 @@ class DisplaySequenceTimerFragment : ChildFragment() {
         //down.next = times10
         wait10.next = repeat*/
 
-        val times4 = TimesLoop(1, 4)
+        /*val times4 = TimesLoop(1, 4)
         val ready = WaitComponent(2, "Bereit?", true)
         val min1 = CountdownTimerComponent(3, "Plank", false, 60000, 0, 0)
         val miniPause1 = CountdownTimerComponent(4, "Pause", true, 45000, 0, 0)
@@ -69,32 +83,92 @@ class DisplaySequenceTimerFragment : ChildFragment() {
         wait3.next = times4
 
 
-        handler = TimerHandler(times4)
-        handler.onNextComponentListener = { timerHandler, component ->
-            if (component !is UiComponent) timerHandler.next()
-            else {
-                titleTV.text = component.title
-                if (component is CountdownTimerComponent) {
-                    progressCircle.visibility = View.VISIBLE
-                    timeTV.visibility = View.VISIBLE
-                    progressCircle.max = component.length.toInt()
-                    object : CountDownTimer(component.length, 16) {
-                        override fun onFinish() {
-                            timerHandler.next()
-                        }
+        handler = TimerHandler(times4)*/
 
-                        override fun onTick(millisUntilFinished: Long) {
-                            progressCircle.progress = millisUntilFinished.toInt()
-                            timeTV.text = minuetSecondText(millisUntilFinished)
-                        }
-                    }.start()
-                } else {
-                    progressCircle.visibility = View.GONE
-                    timeTV.visibility = View.GONE
-                }
-            }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        hostActivity.mainFab.apply {
+            show()
+            animateToIcon(AnimatedIconFab.Icon.NEXT)
         }
 
-        hostActivity.mainFab.setOnClickListener { handler.handleButtonPressed() }
+        var first = true
+        globalViewModel.getTimerSequence(args.sequenceId).observe(viewLifecycleOwner, Observer {
+            if (it == null || !first || it.isEmpty()) return@Observer
+            first = false
+            handler = displayViewModel.getHandler {
+                TimerHandler(it.toRuntimeSequence())
+            }
+            handler.onNextComponentListener = { timerHandler, component ->
+                if (component !is UiComponent) {
+                    timerHandler.next()
+                } else {
+                    titleTV.text = component.title
+                    if (component.showNextTitle) {
+                        val nextUi = timerHandler.previewNextUiComponent()
+                        if (nextUi.isNotNoComponent() && nextUi.title != "") {
+                            Log.d(TAG, "showing next")
+                            nextTitleTV.apply {
+                                visibility = View.VISIBLE
+                                text = resources.getString(R.string.nextTitle, nextUi.title)
+                            }
+                        } else {
+                            nextTitleTV.visibility = View.GONE
+                        }
+                    } else {
+                        nextTitleTV.visibility = View.GONE
+                    }
+                    if (component is CountdownTimerComponent) {
+                        setTimerUiVisibility(View.VISIBLE)
+                        progressCircle.max = component.length.toInt()
+                        val endMillis = displayViewModel.endMillis
+                        val millisInFuture = if (endMillis != null && endMillis > System.currentTimeMillis()) {
+                            Log.d(TAG, "resuming Timer")
+                            endMillis - System.currentTimeMillis()
+                        } else {
+                            Log.d(TAG, "new Timer")
+                            displayViewModel.endMillis = System.currentTimeMillis() + component.length
+                            component.length
+                        }
+                        countdownTimer = object : CountDownTimer(millisInFuture, 16) {
+                            override fun onFinish() {
+                                timerHandler.next()
+                            }
+
+                            override fun onTick(millisUntilFinished: Long) {
+                                progressCircle.progress = millisUntilFinished.toInt()
+                                timeTV.text = minuetSecondText(millisUntilFinished)
+                            }
+                        }.start()
+                    } else {
+                        setTimerUiVisibility(View.GONE)
+                    }
+                }
+            }
+            handler.onButtonStackChangeListener = { size ->
+                if (size == 0) {
+                    hostActivity.mainFab.hide()
+                } else {
+                    hostActivity.mainFab.show()
+                }
+            }
+            handler.onFinishedListener = { findNavController().navigateUp() }
+
+            hostActivity.mainFab.setOnClickListener { handler.handleButtonPressed() }
+        })
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        countdownTimer?.cancel()
+    }
+
+    private fun setTimerUiVisibility(visibility: Int) {
+        progressCircle.visibility = visibility
+        timeTV.visibility = visibility
     }
 }

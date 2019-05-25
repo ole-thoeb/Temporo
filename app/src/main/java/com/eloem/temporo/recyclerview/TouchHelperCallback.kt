@@ -1,16 +1,16 @@
 package com.eloem.temporo.recyclerview
 
-import android.content.ClipData
 import android.content.Context
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
 import android.graphics.drawable.ColorDrawable
-import android.util.Log
-import androidx.core.content.ContextCompat
+import android.view.View
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.eloem.temporo.R
-import com.eloem.temporo.ui.SequenceEditorFragment
-import com.eloem.temporo.ui.SequenceEditorFragment.RecyclerListAdapter.*
+import com.eloem.temporo.ui.SequenceAdapter
 
 class TouchHelperCallback(
     private val adapter: ItemTouchHelperAdapter,
@@ -25,7 +25,7 @@ class TouchHelperCallback(
     private val clearPaint = Paint().apply { xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR) }
 
     override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
-        if (viewHolder.itemViewType == SequenceEditorFragment.RecyclerListAdapter.VIEW_TYPE_ADD) {
+        if (viewHolder.itemViewType != SequenceAdapter.VIEW_TYPE_COMPONENT) {
             return makeMovementFlags(0, 0)
         }
         val dragFlags = ItemTouchHelper.UP or ItemTouchHelper.DOWN
@@ -87,7 +87,19 @@ class TouchHelperCallback(
         deleteIcon.draw(c)
 
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)*/
-        getDefaultUIUtil().onDraw(c, recyclerView, (viewHolder as ItemViewHolder).foregroundView, dX, dY, actionState, isCurrentlyActive)
+        if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+            viewHolder as SequenceAdapter.ItemViewHolder
+            if (dX < 0) {
+                viewHolder.iconLeft.visibility = View.GONE
+                viewHolder.iconRight.visibility = View.VISIBLE
+            } else {
+                viewHolder.iconLeft.visibility = View.VISIBLE
+                viewHolder.iconRight.visibility = View.GONE
+            }
+            getDefaultUIUtil().onDraw(c, recyclerView, viewHolder.foregroundView, dX, dY, actionState, isCurrentlyActive)
+        } else {
+            super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+        }
     }
 
     override fun onChildDrawOver(
@@ -99,22 +111,26 @@ class TouchHelperCallback(
         actionState: Int,
         isCurrentlyActive: Boolean
     ) {
-        getDefaultUIUtil().onDrawOver(c, recyclerView, (viewHolder as ItemViewHolder).foregroundView, dX, dY, actionState, isCurrentlyActive)
+        if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+            getDefaultUIUtil().onDrawOver(c, recyclerView, (viewHolder as SequenceAdapter.ItemViewHolder).foregroundView, dX, dY, actionState, isCurrentlyActive)
+        } else {
+            super.onChildDrawOver(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+        }
     }
 
     override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
-        if (viewHolder != null) {
-            getDefaultUIUtil().onSelected((viewHolder as ItemViewHolder).foregroundView)
+        if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE && viewHolder != null) {
+            getDefaultUIUtil().onSelected((viewHolder as SequenceAdapter.ItemViewHolder).foregroundView)
         }
     }
 
     override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
-        getDefaultUIUtil().clearView((viewHolder as ItemViewHolder).foregroundView)
+        getDefaultUIUtil().clearView((viewHolder as SequenceAdapter.ItemViewHolder).foregroundView)
     }
 
-    private fun clearCanvas(c: Canvas?, left: Float, top: Float, right: Float, bottom: Float) {
+    /*private fun clearCanvas(c: Canvas?, left: Float, top: Float, right: Float, bottom: Float) {
         c?.drawRect(left, top, right, bottom, clearPaint)
-    }
+    }*/
 
     interface ItemTouchHelperAdapter {
 

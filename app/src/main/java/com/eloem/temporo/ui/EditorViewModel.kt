@@ -1,8 +1,12 @@
 package com.eloem.temporo.ui
 
 import androidx.lifecycle.ViewModel
-import com.eloem.temporo.timercomponents.EditComponent
+import com.eloem.temporo.timercomponents.EditSequence
 
 class EditorViewModel : ViewModel() {
-    var editSequence: MutableList<EditComponent> = mutableListOf()
+    private var editSequence: EditSequence? = null
+
+    fun getEditSequence(creator: () -> EditSequence): EditSequence {
+        return editSequence ?: creator().also { editSequence = it }
+    }
 }

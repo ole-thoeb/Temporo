@@ -14,9 +14,15 @@
 
     <string name="seconds">Sekunden</string>
     <string name="minuets">Minuten</string>
+    
+    <string name="emptyMainList">Du hast noch keine Timer.</string>
+
+    <string name="emptySequence">Deine Sequence ist leer.</string>
+
+    <string name="nextTitle">➔ %1$s</string>
 
     <!-- Ui Element Options -->
-    <string name="title">Title</string>
+    <string name="title">Titel</string>
     <string name="showNext">Zeige nächsten</string>
 
     <!-- Loop Options-->
@@ -37,4 +43,7 @@
     <string name="channel_name">Timer</string>
     <string name="channel_description">Momentan laufender Timer</string>
 
+    <!-- Menu options -->
+    <string name="menuEdit">Bearbeiten</string>
+    <string name="menuDelete">Löschen</string>
 </resources>

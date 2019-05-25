@@ -19,6 +19,11 @@ open class ConditionalBranchComponent(id: Long, val condition: () -> Boolean): B
         else next
     }
 
+    override fun previewNext(): Component {
+        return if (condition()) branchNext
+        else next
+    }
+
     override fun init() {
         //nothing
     }
@@ -45,12 +50,16 @@ open class UnlimitedLoop(id: Long): LoopComponent(id) {
     override fun nextComponent(): Component {
         return next
     }
+
+    override fun previewNext(): Component {
+        return next
+    }
 }
 
 open class TimesLoop(id: Long, val times: Int): LoopComponent(id) {
 
     private var mutableTimes = times
-    private var leftLoop = true
+    private var leftLoop = false
 
     override fun init() {
         super.init()
@@ -68,20 +77,35 @@ open class TimesLoop(id: Long, val times: Int): LoopComponent(id) {
         }
     }
 
+    override fun previewNext(): Component {
+        return if (mutableTimes > 0) next
+        else branchNext
+    }
+
 }
 
 open class ButtonLoop(id: Long): LoopComponent(id), ButtonComponent {
 
     private var breakNext = false
+    private var leftLoop = false
 
     override fun init() {
         super.init()
-        breakNext = false
+        if (leftLoop) {
+            breakNext = false
+        }
     }
 
     override fun nextComponent(): Component {
-        return if (breakNext) branchNext
+        return if (breakNext) {
+            leftLoop = true
+            branchNext
+        }
         else next
+    }
+
+    override fun previewNext(): Component {
+        return next
     }
 
     override fun onButtonPressed(): Boolean {

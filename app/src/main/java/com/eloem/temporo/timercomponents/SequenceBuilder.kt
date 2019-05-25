@@ -1,6 +1,7 @@
 package com.eloem.temporo.timercomponents
 
 import android.content.Context
+import java.lang.Error
 
 interface IdProvider {
     fun newId(): Long
@@ -57,5 +58,54 @@ fun editComponentsToSequence(editComponents: List<EditComponent>): Component {
             }
         }
     }
+    return sequence
+}
+
+fun DataSequence.toRuntimeSequence(): Component {
+    require(isNotEmpty()) { "there must be more than zero components" }
+
+    val componentCache = mutableMapOf<Long, Component>()
+
+    fun asComponent (c: DataComponent): Component {
+        return componentCache[c.id] ?: c.toRuntimeComponent().also {
+            componentCache[c.id] = it
+        }
+    }
+
+    val sequence: Component = asComponent(first())
+    var lastComponent = sequence
+
+    /*fun convertAndAddComponent(c: EditComponent) {
+        val convertedC = asComponent(c)
+        lastComponent.next = convertedC
+        lastComponent = convertedC
+    }*/
+
+    fun convertToComponent(index: Int, dataComponent: DataComponent): Component {
+        return when(dataComponent) {
+            is DataComponentMarker -> componentCache[dataComponent.associatedBranchComponentId]?.also {
+                if (it is BranchComponent) {
+                    if (index + 1 < size) {
+                        it.branchNext = convertToComponent(index + 1, this[index + 1])
+                    }
+                }
+            } ?: throw Error()
+
+            else -> asComponent(dataComponent)
+        }
+    }
+
+    forEachIndexed { index, dataComponent ->
+        if (index != 0) {
+            convertToComponent(index, dataComponent).also {
+                //dont override connections set because of looping
+                if (lastComponent.next == NoComponent) {
+                    lastComponent.next = it
+                }
+                lastComponent = it
+            }
+        }
+    }
+
     return sequence
 }
