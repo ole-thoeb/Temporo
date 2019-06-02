@@ -15,12 +15,20 @@
         app:defaultNavHost="true"
         android:id="@+id/navHostFragment"/>
 
+    <com.google.android.material.bottomappbar.BottomAppBar
+        android:id="@+id/bottomAppBar"
+        android:layout_width="match_parent"
+        android:layout_height="?actionBarSize"
+        app:fabAlignmentMode="end"
+        android:layout_gravity="bottom"
+        app:popupTheme="@style/MyPopupMenu"/>
+
     <com.eloem.temporo.util.AnimatedIconFab
         android:id="@+id/mainFab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_arrow_forward"
         android:layout_margin="16dp"
-        android:layout_gravity="bottom|end"/>
+        app:layout_anchor="@id/bottomAppBar"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

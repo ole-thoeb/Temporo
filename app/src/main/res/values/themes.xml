@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light">
+        <item name="textColorSubtle">@color/lightTextColorSubtle</item>
+        <item name="colorDelete">@color/colorDelete</item>
+        <item name="materialCardViewStyle">@style/MyCardView</item>
+        <item name="colorControlNormal">?attr/colorOnSurface</item>
+        <item name="backgroundColor">@color/lightBackgroundColor</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:statusBarColor">?backgroundColor</item>
+        <item name="bottomAppBarStyle">@style/Widget.MaterialComponents.BottomAppBar.Colored</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+</resources>

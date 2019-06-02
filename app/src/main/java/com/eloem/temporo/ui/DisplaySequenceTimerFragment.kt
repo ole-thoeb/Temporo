@@ -116,10 +116,10 @@ class DisplaySequenceTimerFragment : ChildFragment() {
                                 text = resources.getString(R.string.nextTitle, nextUi.title)
                             }
                         } else {
-                            nextTitleTV.visibility = View.GONE
+                            nextTitleTV.visibility = View.INVISIBLE
                         }
                     } else {
-                        nextTitleTV.visibility = View.GONE
+                        nextTitleTV.visibility = View.INVISIBLE
                     }
                     if (component is CountdownTimerComponent) {
                         setTimerUiVisibility(View.VISIBLE)
@@ -157,7 +157,12 @@ class DisplaySequenceTimerFragment : ChildFragment() {
             }
             handler.onFinishedListener = { findNavController().navigateUp() }
 
-            hostActivity.mainFab.setOnClickListener { handler.handleButtonPressed() }
+            hostActivity.mainFab.setOnClickListener {
+                handler.handleButtonPressed()
+            }
+            hostActivity.supportActionBar?.apply {
+                setDisplayHomeAsUpEnabled(true)
+            }
         })
     }
 

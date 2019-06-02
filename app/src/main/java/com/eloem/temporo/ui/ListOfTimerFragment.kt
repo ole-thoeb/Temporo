@@ -2,9 +2,7 @@ package com.eloem.temporo.ui
 
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.ImageButton
 import android.widget.PopupMenu
 import android.widget.TextView
@@ -15,7 +13,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.eloem.temporo.R
-import com.eloem.temporo.recyclerview.BottomSpacingAdapter
 import com.eloem.temporo.timercomponents.DataSequence
 import com.eloem.temporo.util.AnimatedIconFab
 import com.eloem.temporo.util.activityViewModel
@@ -26,6 +23,11 @@ import kotlinx.android.synthetic.main.fragment_list_of_timer.*
 class ListOfTimerFragment : ChildFragment() {
 
     private val globalViewModel: GlobalViewModel by activityViewModel()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,7 +45,7 @@ class ListOfTimerFragment : ChildFragment() {
 
         list.apply {
             layoutManager = GridLayoutManager(requireContext(), 2)
-            adapter = BottomSpacingAdapter(mainAdapter, resources.getDimensionPixelOffset(R.dimen.paddingBottomRecyclerView),2)
+            adapter = mainAdapter
             addItemDecoration(GridSpacingItemDecoration(resources.getDimensionPixelOffset(R.dimen.gridSpacingRecyclerView), 2, true))
             emptyThreshold = 2
             emptyView = empty
@@ -63,6 +65,21 @@ class ListOfTimerFragment : ChildFragment() {
                         .actionListOfTimerFragmentToSequenceEditor(globalViewModel.newTimerSequence().id))
             }
         }
+        hostActivity.supportActionBar?.apply {
+            setDisplayHomeAsUpEnabled(false)
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.main_sequence_list, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean = when(item.itemId) {
+        R.id.settings -> {
+            findNavController().navigate(R.id.action_global_settingsFragment)
+            true
+        }
+        else -> super.onOptionsItemSelected(item)
     }
 
     class MainListAdapter(

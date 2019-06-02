@@ -3,5 +3,6 @@
     <declare-styleable name="customAttrs">
         <attr name="textColorSubtle" format="color"/>
         <attr name="colorDelete" format="color"/>
+        <attr name="backgroundColor" format="color"/>
     </declare-styleable>
 </resources>

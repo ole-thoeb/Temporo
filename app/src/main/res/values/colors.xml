@@ -1,9 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!-- theme colors -->
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
 
+    <color name="lightBackgroundColor">#FFFFFF</color>
+    <color name="darkBackgroundColor">#121212</color>
+
+    <color name="colorDelete">#f44336</color>
+    <color name="lightTextColorSubtle">#66000000</color>
+    <color name="darkTextColorSubtle">#66FFFFFF</color>
+
+    <!-- general Colors -->
     <color name="red">#F6402C</color>
     <color name="deep_red">#D10000</color>
     <color name="dark_red">#990505</color>

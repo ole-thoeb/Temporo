@@ -46,4 +46,23 @@
     <!-- Menu options -->
     <string name="menuEdit">Bearbeiten</string>
     <string name="menuDelete">Löschen</string>
+
+    <!-- Settings -->
+    <string name="settings">Einstellungen</string>
+
+    <string name="settingsThemeTitle">Thema</string>
+    <string name="darkTheme">Dunkles Thema</string>
+    <string name="lightTheme">Helles Thema</string>
+    <string name="batterySaverTheme">Bestimmt durch Energiesparmodus</string>
+    <string-array name="themes">
+        <item>@string/lightTheme</item>
+        <item>@string/darkTheme</item>
+        <item>@string/batterySaverTheme</item>
+    </string-array>
+    <string name="defaultThemeValue">2</string>
+    <string-array name="settingsThemeValue">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
 </resources>

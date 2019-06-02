@@ -3,18 +3,6 @@ package com.eloem.temporo.timercomponents
 import android.content.Context
 import java.lang.Error
 
-interface IdProvider {
-    fun newId(): Long
-}
-
-class SequenceBuilder(val context: Context, val sequence: List<EditComponent>) : IdProvider {
-    override fun newId(): Long {
-        return 1
-    }
-
-
-}
-
 fun editComponentsToSequence(editComponents: List<EditComponent>): Component {
     require(editComponents.isNotEmpty()) { "list can't be empty" }
     var curMaxId = editComponents.maxBy { it.id }?.id ?: Component.NO_ID
