@@ -25,6 +25,18 @@
                       </LayoutPositions>
                     </value>
                   </entry>
+                  <entry key="displayTimerFragment">
+                    <value>
+                      <LayoutPositions>
+                        <option name="myPosition">
+                          <Point>
+                            <option name="x" value="144" />
+                            <option name="y" value="-500" />
+                          </Point>
+                        </option>
+                      </LayoutPositions>
+                    </value>
+                  </entry>
                   <entry key="listOfTimerFragment">
                     <value>
                       <LayoutPositions>
@@ -37,6 +49,11 @@
                         <option name="myPositions">
                           <map>
                             <entry key="action_listOfTimerFragment_to_displaySequenceTimer">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
+                            <entry key="action_listOfTimerFragment_to_displayTimerFragment">
                               <value>
                                 <LayoutPositions />
                               </value>

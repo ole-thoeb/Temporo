@@ -36,6 +36,7 @@ data class TreeNode<T>(
 }
 
 fun <T> TreeNode<T>.inOrderIterator(): Iterator<T> = BinaryTreeIterator(this)
+fun <T> TreeNode<T>.nodeInOrderIterator(): Iterator<TreeNode<T>> = BinaryTreeNodeIterator(this)
 
 internal class BinaryTreeIterator<T>(mTree: TreeNode<T>?): Iterator<T>{
 	private val stack = Stack<TreeNode<T>>()
@@ -67,5 +68,38 @@ internal class BinaryTreeIterator<T>(mTree: TreeNode<T>?): Iterator<T>{
 		inOrderCourser = nextVal.right
 		continueInorder()
 		return nextVal.value
+	}
+}
+
+internal class BinaryTreeNodeIterator<T>(mTree: TreeNode<T>?): Iterator<TreeNode<T>> {
+	private val stack = Stack<TreeNode<T>>()
+	private var inOrderCourser: TreeNode<T>? = mTree
+	private var currentVal: TreeNode<T>? = null
+
+	init {
+		continueInorder()
+	}
+
+	private fun continueInorder(){
+		while (true){
+			val courser = inOrderCourser
+			if (courser != null){
+				stack.push(courser)
+				inOrderCourser = courser.left
+			}
+			else break
+		}
+	}
+
+	override fun hasNext(): Boolean = !stack.empty() || inOrderCourser != null
+
+	override fun next(): TreeNode<T> {
+		if (stack.empty()) throw NoSuchElementException()
+
+		val nextVal = stack.pop()
+		currentVal = nextVal
+		inOrderCourser = nextVal.right
+		continueInorder()
+		return nextVal
 	}
 }

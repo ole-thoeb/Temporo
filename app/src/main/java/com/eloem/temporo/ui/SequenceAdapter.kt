@@ -294,7 +294,7 @@ class SequenceAdapter(
     }
 
     //pos is holder position
-    /*private fun removeAssociatedEndMarker(pos: Int) {
+    /*private fun removeAssociatedEndMarker(pos: INT) {
         editSequence.editComponents[holderToCollectionPos(pos)].let { editComponent ->
             if (editComponent is EditLoop) {
                 val index = editSequence.editComponents.indexOf(editComponent.endMarker)

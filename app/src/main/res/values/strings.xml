@@ -46,6 +46,7 @@
     <!-- Menu options -->
     <string name="menuEdit">Bearbeiten</string>
     <string name="menuDelete">Löschen</string>
+    <string name="menuOpenInstructions">Anweisung öffnen</string>
 
     <!-- Settings -->
     <string name="settings">Einstellungen</string>

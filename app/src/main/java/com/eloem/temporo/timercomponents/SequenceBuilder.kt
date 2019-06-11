@@ -1,7 +1,7 @@
 package com.eloem.temporo.timercomponents
 
-import android.content.Context
-import java.lang.Error
+import com.eloem.temporo.util.StringCounter
+import com.eloem.temporo.util.exhaustive
 
 fun editComponentsToSequence(editComponents: List<EditComponent>): Component {
     require(editComponents.isNotEmpty()) { "list can't be empty" }
@@ -96,4 +96,72 @@ fun DataSequence.toRuntimeSequence(): Component {
     }
 
     return sequence
+}
+
+data class LoopBuildData(val loopStart: Int, val jumpOut: GoTo, val teardown: List<Instruction> = emptyList())
+
+@Suppress("IMPLICIT_CAST_TO_ANY")
+fun DataSequence.toInstructions(): List<Instruction> {
+    require(isNotEmpty()) { "there must be more than zero components" }
+    val instructions: MutableList<Instruction> = mutableListOf()
+    val loopMap: MutableMap<Long, LoopBuildData> = mutableMapOf()
+    val variableNameGenerator = StringCounter("autoGenVariable")
+    forEach { component ->
+        when(component) {
+            is DataComponentLoop -> {
+                when(component.mode) {
+                    LoopComponent.Mode.BUTTON_PRESS -> {
+                        val indexVariableName = variableNameGenerator.next()
+                        val buttonVariableName = variableNameGenerator.next()
+                        instructions.apply {
+                            add(AssignVariable(indexVariableName, "0"))
+                            add(RegisterButtonVariable(buttonVariableName))
+                            val loopStart = size
+                            add(AssignVariable(indexVariableName, "$indexVariableName + 1"))
+                            val jump = JumpIfTrue("$buttonVariableName == 1", 0)
+                            add(jump)
+                            loopMap[component.id] = LoopBuildData(loopStart, jump, listOf(UnregisterButtonVariable(buttonVariableName)))
+                        }
+                    }
+                    LoopComponent.Mode.TIMES -> {
+                        val indexVariableName = variableNameGenerator.next()
+                        instructions.apply {
+                            add(AssignVariable(indexVariableName, "0"))
+                            val loopStart = size
+                            add(AssignVariable(indexVariableName, "$indexVariableName + 1"))
+                            val jump = JumpIfFalse("$indexVariableName <= ${component.times}", 0)
+                            add(jump)
+                            loopMap[component.id] = LoopBuildData(loopStart, jump)
+                        }
+                    }
+                    LoopComponent.Mode.UNLIMITED -> {
+                        val indexVariableName = variableNameGenerator.next()
+                        instructions.apply {
+                            add(AssignVariable(indexVariableName, "0"))
+                            val loopStart = size
+                            add(AssignVariable(indexVariableName, "$indexVariableName + 1"))
+                            //need a jump for BuildData
+                            val jump = JumpIfFalse("true", 0)
+                            loopMap[component.id] = LoopBuildData(loopStart, jump)
+                        }
+                    }
+                    LoopComponent.Mode.ADVANCED -> throw Error()
+                }
+            }
+            is DataComponentMarker -> {
+                loopMap[component.associatedBranchComponentId]?.let {
+                    instructions.add(GoTo(it.loopStart))
+                    it.jumpOut.targetAddress = instructions.size
+                    instructions.addAll(it.teardown)
+                }
+            }
+            is DataComponentWait -> {
+                instructions.add(WaitForButton(component.title, component.showNextTitle))
+            }
+            is DataComponentCountdown -> {
+                instructions.add(RunTimer(component.title, component.showNextTitle, component.length))
+            }
+        }.exhaustive()
+    }
+    return instructions
 }

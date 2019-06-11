@@ -1,7 +1,11 @@
 package com.eloem.temporo.timercomponents
 
-interface Instruction {
+import com.eloem.temporo.util.ArithmeticOperation
+import com.eloem.temporo.util.LogicOperation
+import com.eloem.temporo.util.ifNull
+import com.eloem.temporo.util.onFailure
 
+interface Instruction {
     fun execute(executor: TimerExecutor)
 }
 
@@ -32,7 +36,7 @@ interface TimerInstruction: UiInstruction {
 /**
  * Jump to targetAddress
  */
-open class GoTo(val targetAddress: Int): Instruction {
+open class GoTo(var targetAddress: Int): Instruction {
 
     init {
         require(targetAddress >= 0) { "address must be non negative, but is $targetAddress" }
@@ -41,35 +45,66 @@ open class GoTo(val targetAddress: Int): Instruction {
     override fun execute(executor: TimerExecutor) {
         executor.programCounter = targetAddress
     }
+
+    override fun toString(): String = "GoTo: $targetAddress"
 }
 
 /**
  * Jump to targetAddress if condition is true
  */
 class JumpIfTrue(val condition: String, targetAddress: Int): GoTo(targetAddress) {
+
+    private var expression: LogicOperation? = null
+
     override fun execute(executor: TimerExecutor) {
-        if (executor.evaluateCondition(condition)) super.execute(executor)
+        val calculatedValue = expression
+            .ifNull { executor.buildLogicOperation(condition).onFailure { return } }
+            .also { expression = it }
+            .execute()
+        if (calculatedValue) super.execute(executor)
+        else executor.programCounter++
     }
+
+    override fun toString(): String = "if $condition GoTo $targetAddress"
 }
 
 /**
  * Jump to targetAddress if condition is false
  */
 class JumpIfFalse(val condition: String, targetAddress: Int): GoTo(targetAddress) {
+
+    private var expression: LogicOperation? = null
+
     override fun execute(executor: TimerExecutor) {
-        if (!executor.evaluateCondition(condition)) super.execute(executor)
+        val calculatedValue = expression
+            .ifNull { executor.buildLogicOperation(condition).onFailure { return } }
+            .also { expression = it }
+            .execute()
+        if (!calculatedValue) super.execute(executor)
+        else executor.programCounter++
     }
+
+    override fun toString(): String = "if !$condition GoTo $targetAddress"
 }
 
 /**
  * Update or create new local variable
  */
-class AssigneVariable(val variable: String, val newValue: String): Instruction {
+class AssignVariable(val variable: String, val newValue: String): Instruction {
+
+    private var expression: ArithmeticOperation? = null
+
     override fun execute(executor: TimerExecutor) {
-        executor.localVariables[variable] = executor.evaluateValue(newValue)
+        val calculatedValue = expression
+            .ifNull { executor.buildArithmeticOperation(newValue).onFailure { return } }
+            .also { expression = it }
+            .execute()
+        executor.localVariables[variable] = calculatedValue
 
         executor.programCounter++
     }
+
+    override fun toString(): String = "Assign: $variable = $newValue"
 }
 
 class WaitForButton(
@@ -79,12 +114,34 @@ class WaitForButton(
 
     override fun execute(executor: TimerExecutor) {
         setUiData(executor)
-        executor.suspendTillEvent(TimerExecutor.ExecutorEvent.BUTTON)
+        executor.suspendTillButtonPressed()
         executor.programCounter++
     }
+
+    override fun toString(): String = "WaitForButton(title = $title, showNextTitle = $showNextTitle)"
 }
 
-class RunTimer(
+class RegisterButtonVariable(val variable: String) : Instruction {
+    override fun execute(executor: TimerExecutor) {
+        executor.localVariables[variable] = 0
+        executor.registerButtonVariable(variable)
+        executor.programCounter++
+    }
+
+    override fun toString(): String = "Register $variable for Button"
+}
+
+
+class UnregisterButtonVariable(val variable: String) : Instruction {
+    override fun execute(executor: TimerExecutor) {
+        executor.unregisterButtonVariable(variable)
+        executor.programCounter++
+    }
+
+    override fun toString(): String = "Unregister $variable for Button"
+}
+
+data class RunTimer(
     override val title: String,
     override val showNextTitle: Boolean,
     override val length: Long
@@ -92,8 +149,10 @@ class RunTimer(
 
     override fun execute(executor: TimerExecutor) {
         setUiData(executor)
-        executor.suspendTillEvent(TimerExecutor.ExecutorEvent.TIMER_FINISHED)
-        executor.startTimer(length)
+        executor.suspendTillTimerFinished()
+        executor.startTimer(this)
         executor.programCounter++
     }
+
+    //override fun toString(): String = "RunTimer(title = $title, showNextTitle = $showNextTitle, length = $length)"
 }

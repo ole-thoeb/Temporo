@@ -39,6 +39,9 @@
         <action
             android:id="@+id/action_listOfTimerFragment_to_displaySequenceTimer"
             app:destination="@id/displaySequenceTimer"/>
+        <action
+            android:id="@+id/action_listOfTimerFragment_to_displayTimerFragment"
+            app:destination="@id/displayTimerFragment"/>
     </fragment>
     <fragment
         android:id="@+id/settingsFragment"
@@ -47,4 +50,12 @@
     <action
         android:id="@+id/action_global_settingsFragment"
         app:destination="@id/settingsFragment"/>
+    <fragment
+        android:id="@+id/displayTimerFragment"
+        android:name="com.eloem.temporo.ui.DisplayTimerFragment"
+        android:label="DisplayTimerFragment">
+        <argument
+            android:name="sequenceId"
+            app:argType="long"/>
+    </fragment>
 </navigation>

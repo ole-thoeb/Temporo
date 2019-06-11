@@ -1,118 +1,131 @@
 package com.eloem.temporo.util
 
 import com.eloem.temporo.util.binarytree.TreeNode
+import com.eloem.temporo.util.binarytree.nodeInOrderIterator
+import java.lang.ClassCastException
 import java.lang.Exception
+import java.lang.NumberFormatException
 import java.lang.StringBuilder
 import kotlin.IllegalStateException
 
-enum class TokenCategory { OPERATOR, VARIABLE, CONSTANT, BRACKET, ILLEGAL }
+enum class TokenCategory { OPERATOR, VARIABLE, CONSTANT, BRACKET }
 
-fun String.splitToTokens(): List<Pair<String, TokenCategory>> {
-    return replace(" ", "").splitToTokensNoBlanks()
-}
+//fun String.splitToTokens(): List<Pair<String, TokenCategory>> {
+//    return replace(" ", "").splitToTokensNoBlanks()
+//}
 
-private fun String.splitToTokensNoBlanks(): List<Pair<String, TokenCategory>> {
-    if (isEmpty()) return emptyList()
+fun String.splitToTokens(): Optional<List<Pair<String, TokenCategory>>, IllegalTokenError> {
+    if (isEmpty()) return Optional.Success(emptyList())
 
     val tokenList = mutableListOf<Pair<String, TokenCategory>>()
 
+    var i = 0
+    while (this[i] == ' ') i++
     var currentToken = StringBuilder()
-    var currentCategory = first().category()
-    currentToken.append(first())
+    var currentCategory = this[i].category().onFailure { return Optional.Failure(it) }
 
-    for (i in 1..lastIndex) {
-        val category = this[i].category()
-        //bracket is always one character
-        if (currentCategory != category || category == TokenCategory.BRACKET) {
-            tokenList.add(currentToken.toString() to currentCategory)
-            currentToken = StringBuilder()
-            currentCategory = category
+    currentToken.append(this[i])
+    i++
+    while (i < length) {
+        if (this[i] != ' ') {
+            val category = this[i].category().onFailure { return Optional.Failure(it) }
+            //bracket is always one character
+            if (currentCategory != category || category == TokenCategory.BRACKET) {
+                tokenList.add(currentToken.toString() to currentCategory)
+                currentToken = StringBuilder()
+                currentCategory = category
+            }
+            currentToken.append(this[i])
         }
-        currentToken.append(this[i])
+        i++
     }
 
     tokenList.add(currentToken.toString() to currentCategory)
 
-    return tokenList
+    return Optional.Success(tokenList)
 }
 
 //private val variableRegex = """[A-Za-z]""".toRegex()
 //private val operatorRegex = """[<>=+\-*/]""".toRegex()
 
-fun Char.category(): TokenCategory {
+fun Char.category(): Optional<TokenCategory, IllegalTokenError> {
     return when {
-        this in 'A'..'Z' || this in 'a'..'z' -> TokenCategory.VARIABLE
+        this in 'A'..'Z' || this in 'a'..'z' -> Optional.Success(TokenCategory.VARIABLE)
         this == '<' || this == '>' || this == '=' || this == '+' || this == '-' ||
-                this == '*' || this == '/' || this == '&' || this == '|' || this == '!' -> TokenCategory.OPERATOR
-        this in '0'..'9' -> TokenCategory.CONSTANT
-        this == '(' || this == ')' -> TokenCategory.BRACKET
-        else -> TokenCategory.ILLEGAL
+                this == '*' || this == '/' || this == '&' || this == '|' || this == '!' -> Optional.Success(
+            TokenCategory.OPERATOR
+        )
+        this in '0'..'9' -> Optional.Success(TokenCategory.CONSTANT)
+        this == '(' || this == ')' -> Optional.Success(TokenCategory.BRACKET)
+        else -> Optional.Failure(IllegalTokenError(this.toString()))
     }
 }
 
-fun mapOperations(tokens: List<Pair<String, TokenCategory>>): List<AtomicToken> {
-    val cleanedList = tokens.filterNot { it.second == TokenCategory.ILLEGAL }
-    return cleanedList.map<Pair<String, TokenCategory>, AtomicToken> {
-        when(it.second) {
+fun mapOperations(tokens: List<Pair<String, TokenCategory>>): Optional<List<AtomicToken>, ParsError> {
+    return tokens.mapOptional<Pair<String, TokenCategory>, AtomicToken, ParsError> {
+        when (it.second) {
             TokenCategory.BRACKET -> {
-                if (it.first == "(") Bracket.OPEN
-                else Bracket.CLOSE
+                if (it.first == "(") Optional.Success<AtomicToken, ParsError>(Bracket.OPEN)
+                else Optional.Success<AtomicToken, ParsError>(Bracket.CLOSE)
             }
             TokenCategory.CONSTANT -> {
-                ConstantInt(it.first.toInt())
+                try {
+                    Optional.Success<AtomicToken, ParsError>(ConstantInt(it.first.toInt()))
+                } catch (e: NumberFormatException) {
+                    Optional.Failure<AtomicToken, ParsError>(ConstantOverflowError(it.first))
+                }
             }
             TokenCategory.VARIABLE -> {
                 when {
-                    it.first.equals("false", true) -> ConstFalse
-                    it.first.equals("true", true) -> ConstTrue
-                    else -> Variable(it.first)
+                    it.first.equals("false", false) -> Optional.Success<AtomicToken, ParsError>(ConstFalse)
+                    it.first.equals("true", true) -> Optional.Success<AtomicToken, ParsError>(ConstTrue)
+                    else -> Optional.Success<AtomicToken, ParsError>(Variable(it.first))
                 }
             }
             TokenCategory.OPERATOR -> {
-                when(it.first) {
-                    "==" -> Equal<Any, Any>()
-                    "!=" -> NotEqual<Any, Any>()
-                    "<" -> Smaller()
-                    ">" -> Greater()
-                    "<=" -> SmallerEqual()
-                    ">=" -> GreaterEqual()
-                    "&&" -> And()
-                    "||" -> Or()
-                    "!" -> Not()
-                    "+" -> Plus()
-                    "-" -> Minus()
-                    "*" -> Mult()
-                    "/" -> Div()
-                    else -> throw IllegalTokenException("Unknown token string ${it.first}")
+                when (it.first) {
+                    "==" -> Optional.Success<AtomicToken, ParsError>(Equal())
+                    "!=" -> Optional.Success<AtomicToken, ParsError>(NotEqual())
+                    "<" -> Optional.Success<AtomicToken, ParsError>(Smaller())
+                    ">" -> Optional.Success<AtomicToken, ParsError>(Greater())
+                    "<=" -> Optional.Success<AtomicToken, ParsError>(SmallerEqual())
+                    ">=" -> Optional.Success<AtomicToken, ParsError>(GreaterEqual())
+                    "&&" -> Optional.Success<AtomicToken, ParsError>(And())
+                    "||" -> Optional.Success<AtomicToken, ParsError>(Or())
+                    "!" -> Optional.Success<AtomicToken, ParsError>(Not())
+                    "+" -> Optional.Success<AtomicToken, ParsError>(Plus())
+                    "-" -> Optional.Success<AtomicToken, ParsError>(Minus())
+                    "*" -> Optional.Success<AtomicToken, ParsError>(Mult())
+                    "/" -> Optional.Success<AtomicToken, ParsError>(Div())
+                    else -> Optional.Failure<AtomicToken, ParsError>(UnknownOperationError(it.first))
                 }
             }
-            TokenCategory.ILLEGAL -> throw IllegalTokenException("Unknown token string ${it.first}")
         }
     }
 }
 
-fun List<AtomicToken>.expressionEndLeft(startIndex: Int): Int {
+fun List<AtomicToken>.expressionEndLeft(startIndex: Int): Optional<Int, IllegalBracketError> {
     var i = startIndex - 1
     var brackets = 0
     while (i >= 0) {
         if (this[i] == Bracket.CLOSE) brackets++
         else if (this[i] == Bracket.OPEN) brackets--
-        if (brackets == 0) return i
+        if (brackets == 0) return Optional.Success(i)
         i--
     }
-    throw IllegalBracketException()
+    return Optional.Failure(IllegalBracketError())
 }
 
-fun List<AtomicToken>.expressionEndRight(startIndex: Int) : Int {
+fun List<AtomicToken>.expressionEndRight(startIndex: Int): Optional<Int, IllegalBracketError> {
     var i = startIndex + 1
     var brackets = 0
     while (i < size) {
         if (this[i] == Bracket.CLOSE) brackets--
         else if (this[i] == Bracket.OPEN) brackets++
-        if (brackets == 0) return i
+        if (brackets == 0) return Optional.Success(i)
         i++
     }
-    throw IllegalBracketException()
+    return Optional.Failure(IllegalBracketError())
 }
 
 fun List<AtomicToken>.hasBracketsAtEnds(): Boolean {
@@ -127,16 +140,16 @@ fun List<AtomicToken>.hasBracketsAtEnds(): Boolean {
     throw IllegalBracketException()
 }
 
-fun addBrackets(tokens: List<AtomicToken>): List<AtomicToken> {
+fun addBrackets(tokens: List<AtomicToken>): Optional<List<AtomicToken>, IllegalBracketError> {
     val mutable = tokens.toMutableList()
 
     var i = 0
     while (i < mutable.size) {
         val cur = mutable[i]
         if (cur is Not) {
-            val endRight = mutable.expressionEndRight(i)
+            val endRight = mutable.expressionEndRight(i).onFailure { return Optional.Failure(it) }
             if (endRight != mutable.lastIndex && mutable[endRight + 1] != Bracket.CLOSE) {
-                mutable.add(i , Bracket.OPEN)
+                mutable.add(i, Bracket.OPEN)
                 i++
                 mutable.add(endRight + 2, Bracket.CLOSE)
             }
@@ -147,11 +160,12 @@ fun addBrackets(tokens: List<AtomicToken>): List<AtomicToken> {
     while (i < mutable.size) {
         val cur = mutable[i]
         if (cur is Div || cur is Mult) {
-            val endLeft = mutable.expressionEndLeft(i)
-            val endRight = mutable.expressionEndRight(i)
+            val endLeft = mutable.expressionEndLeft(i).onFailure { return Optional.Failure(it) }
+            val endRight = mutable.expressionEndRight(i).onFailure { return Optional.Failure(it) }
             //one of the indexes is not at the edge and there isn't already the bracket
             if ((endLeft != 0 && mutable[endLeft - 1] != Bracket.OPEN) ||
-                (endRight != mutable.lastIndex && mutable[endRight + 1] != Bracket.CLOSE)) {
+                (endRight != mutable.lastIndex && mutable[endRight + 1] != Bracket.CLOSE)
+            ) {
                 mutable.add(endLeft, Bracket.OPEN)
                 i++
                 mutable.add(endRight + 2, Bracket.CLOSE)
@@ -162,12 +176,30 @@ fun addBrackets(tokens: List<AtomicToken>): List<AtomicToken> {
     i = 0
     while (i < mutable.size) {
         val cur = mutable[i]
-        if (cur is TokenOperation<*> && cur !is Div && cur !is Mult && cur !is Not) {
-            val endLeft = mutable.expressionEndLeft(i)
-            val endRight = mutable.expressionEndRight(i)
+        if (cur is Plus || cur is Minus) {
+            val endLeft = mutable.expressionEndLeft(i).onFailure { return Optional.Failure(it) }
+            val endRight = mutable.expressionEndRight(i).onFailure { return Optional.Failure(it) }
             //one of the indexes is not at the edge and there isn't already the bracket
             if ((endLeft != 0 && mutable[endLeft - 1] != Bracket.OPEN) ||
-                (endRight != mutable.lastIndex && mutable[endRight + 1] != Bracket.CLOSE)) {
+                (endRight != mutable.lastIndex && mutable[endRight + 1] != Bracket.CLOSE)
+            ) {
+                mutable.add(endLeft, Bracket.OPEN)
+                i++
+                mutable.add(endRight + 2, Bracket.CLOSE)
+            }
+        }
+        i++
+    }
+    i = 0
+    while (i < mutable.size) {
+        val cur = mutable[i]
+        if (cur is IntCompare || cur is BooleanOperation || cur is Equal || cur is NotEqual) {
+            val endLeft = mutable.expressionEndLeft(i).onFailure { return Optional.Failure(it) }
+            val endRight = mutable.expressionEndRight(i).onFailure { return Optional.Failure(it) }
+            //one of the indexes is not at the edge and there isn't already the bracket
+            if ((endLeft != 0 && mutable[endLeft - 1] != Bracket.OPEN) ||
+                (endRight != mutable.lastIndex && mutable[endRight + 1] != Bracket.CLOSE)
+            ) {
                 mutable.add(endLeft, Bracket.OPEN)
                 i++
                 mutable.add(endRight + 2, Bracket.CLOSE)
@@ -179,47 +211,110 @@ fun addBrackets(tokens: List<AtomicToken>): List<AtomicToken> {
         mutable.add(0, Bracket.OPEN)
         mutable.add(Bracket.CLOSE)
     }
-    return mutable
+    return Optional.Success(mutable)
 }
 
-fun buildOperationTree(tokens: List<AtomicToken>): TreeNode<AtomicToken> {
+fun buildOperationTree(tokens: List<AtomicToken>): Optional<TreeNode<AtomicToken>, ParsError> {
+    //only 1 token plus 2 Brackets
+    if (tokens.size == 3) return Optional.Success(TreeNode.valueOf(tokens[1]))
+
     var current: TreeNode<AtomicToken> = TreeNode.valueOf(PLACEHOLDER_TOKEN)
     for (i in 1..tokens.lastIndex) {
-        when(val cur = tokens[i]) {
+        when (val cur = tokens[i]) {
             is Bracket.OPEN -> {
                 val newNode: TreeNode<AtomicToken> = TreeNode.valueOf(PLACEHOLDER_TOKEN)
                 when {
                     current.left == null -> current.insertLeft(newNode)
                     current.right == null -> current.insertRight(newNode)
-                    else -> throw IllegalStateException("can't open another bracket.")
+                    else -> return Optional.Failure(IllegalBracketError())
                 }
                 current = newNode
             }
             is Bracket.CLOSE -> {
-                if (i != tokens.lastIndex) current = current.requireParent()
+                if (i != tokens.lastIndex) current = current.parent.ifNull { return Optional.Failure(IllegalBracketError()) }
             }
             is TokenOperation<*> -> {
-                current.requirePlaceholder(cur)
+                if (current.value != PLACEHOLDER_TOKEN) {
+                    return Optional.Failure(UnexpectedOperatorError(cur))
+                }
                 current.value = cur
             }
             is Value<*> -> when {
                 current.left == null -> current.insertLeft(TreeNode.valueOf(cur))
                 current.right == null -> current.insertRight(TreeNode.valueOf(cur))
-                else -> throw IllegalStateException("no space to put $cur")
+                else -> return Optional.Failure(UnexpectedValueError(cur))
             }
         }
     }
-    return current
+    return Optional.Success(current)
 }
 
-fun TreeNode<AtomicToken>.requireParent() = parent ?: throw IllegalStateException("could not return to parent")
+fun linkOperations(
+    operationTreeNode: TreeNode<AtomicToken>
+): Optional<AtomicToken, UnexpectedTypeError> {
+    for (node in operationTreeNode.nodeInOrderIterator()) {
+        val value = node.value
+        if (value is UnaryOperation<*, *>) {
+            try {
+                value.forceOperand1(node.left?.value)
+            } catch (e: Exception) {
+                return Optional.Failure(UnexpectedTypeError(node.left?.value.type, value.expectedOperand1))
+            }
+            if (value is BinaryOperation<*, *, *>) {
+                try {
+                    value.forceOperand2(node.right!!.value)
+                } catch (e: Exception) {
+                    return Optional.Failure(UnexpectedTypeError(node.left?.value.type, value.expectedOperand2))
+                }
+            }
+        }
+    }
+    return Optional.Success(operationTreeNode.value)
+    //operationTreeNode.value.attachRuntime(runtime)
+    //@Suppress("UNCHECKED_CAST")
+    //return try {
+    //    Optional.Success(operationTreeNode.value as T)
+    //} catch (e: ClassCastException) {
+    //    Optional.Failure(UnexpectedTypeError(operationTreeNode.value.type, ))
+    //}
+}
+
+fun buildArithmeticOperation(
+    operationTreeNode: TreeNode<AtomicToken>,
+    runtime: Map<String, Int>? = null
+): Optional<ArithmeticOperation, UnexpectedTypeError> {
+    return try {
+        linkOperations((operationTreeNode)).withSuccess {
+            attachRuntime(runtime)
+            this as ArithmeticOperation
+        }
+    } catch (e: ClassCastException) {
+        Optional.Failure(UnexpectedTypeError(operationTreeNode.value.type, Type.INT))
+    }
+}
+
+fun buildLogicOperation(
+    operationTreeNode: TreeNode<AtomicToken>,
+    runtime: Map<String, Int>? = null
+): Optional<LogicOperation, UnexpectedTypeError> {
+    return try {
+        linkOperations((operationTreeNode)).withSuccess {
+            attachRuntime(runtime)
+            this as LogicOperation
+        }
+    } catch (e: ClassCastException) {
+        Optional.Failure(UnexpectedTypeError(operationTreeNode.value.type, Type.BOOLEAN))
+    }
+}
+
+/*fun TreeNode<AtomicToken>.requireParent() = parent ?: throw IllegalStateException("could not return to parent")
 
 fun TreeNode<AtomicToken>.requirePlaceholder(neededFor: AtomicToken) {
     if (value != PLACEHOLDER_TOKEN) {
         throw IllegalTokenException("PlaceHolder expected for $neededFor")
     }
-}
+}*/
 
-open class IllegalTokenException(msg: String): Exception(msg)
+open class IllegalTokenException(msg: String) : Exception(msg)
 
-class IllegalBracketException(msg: String = "Bad Brackets"): IllegalTokenException(msg)
+class IllegalBracketException(msg: String = "Bad Brackets") : IllegalTokenException(msg)

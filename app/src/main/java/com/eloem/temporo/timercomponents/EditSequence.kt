@@ -48,3 +48,5 @@ fun DataSequence.toEditSequence(colorProvider: ColorProvider): EditSequence {
         }
     }.toMutableList())
 }
+
+fun EditSequence.isEmpty(): Boolean = title == "" && editComponents.isEmpty()

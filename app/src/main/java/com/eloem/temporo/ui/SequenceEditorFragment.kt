@@ -78,7 +78,9 @@ class SequenceEditorFragment : ChildFragment() {
 
     override fun onPause() {
         super.onPause()
-
+        if (recyclerAdapter.editSequence.isEmpty()) {
+            globalViewModel.deleteTimerSequence(recyclerAdapter.editSequence.toDataSequence())
+        }
         //globalViewModel.updateTimerSequence(recyclerAdapter.editSequence.toDataSequence())
     }
 }

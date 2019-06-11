@@ -118,6 +118,12 @@ class ListOfTimerFragment : ChildFragment() {
                                 globalViewModel.deleteTimerSequence(sequences[holder.adapterPosition])
                                 true
                             }
+                            R.id.openInstructions -> {
+                                button.findNavController()
+                                    .navigate(ListOfTimerFragmentDirections
+                                        .actionListOfTimerFragmentToDisplayTimerFragment(sequences[holder.adapterPosition].id))
+                                true
+                            }
                             else -> false
                         }
                     }

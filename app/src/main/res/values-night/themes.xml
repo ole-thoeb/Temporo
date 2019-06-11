@@ -6,6 +6,7 @@
         <item name="materialCardViewStyle">@style/MyCardView</item>
         <item name="colorControlNormal">?attr/colorOnSurface</item>
         <item name="backgroundColor">@color/darkBackgroundColor</item>
+        <item name="android:statusBarColor">?backgroundColor</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
